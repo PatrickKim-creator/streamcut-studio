@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CUTLAB PRO — YouTube Shorts Studio</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="studio-shell">
+    <!-- TOP STUDIO BAR -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">CL</span>
+        <div>
+          <div class="brand-title">CUTLAB PRO</div>
+          <div class="brand-sub">24/7 Clipper + Shorts NLE</div>
+        </div>
+        <div class="view-switch" id="view-switch">
+          <button type="button" class="vs-btn active" data-view="editor">Shorts Editor</button>
+          <button type="button" class="vs-btn" data-view="bot">24/7 Live Bot <span id="vs-live-cnt" class="badge">0</span></button>
+        </div>
+      </div>
+
+      <div class="topbar-center">
+        <select id="preset-select" class="select-sm" title="1-Click Pro Editing Style">
+          <option value="viral_gaming">Style: Viral Gaming / Retention Cut</option>
+          <option value="clean_creator">Style: Clean Creator / Talking Head</option>
+          <option value="cinematic">Style: Cinematic Hype</option>
+        </select>
+        <button id="btn-auto-edit" class="btn btn-amber" title="Auto-cut dead air, add punch zooms, SFX, hook &amp; captions">
+          &#9889; 1-Click Pro Auto-Edit
+        </button>
+        <button id="btn-cut-deadair" class="btn btn-ghost" title="Remove quiet pauses > 0.65s">
+          Cut Dead Air
+        </button>
+        <div class="divider-v"></div>
+        <button id="btn-undo" class="btn btn-icon" title="Undo (Cmd/Ctrl+Z)">&#8630;</button>
+        <button id="btn-redo" class="btn btn-icon" title="Redo (Cmd/Ctrl+Shift+Z)">&#8631;</button>
+        <label class="chk-pill" title="Toggle YouTube Shorts UI Safe Zone Overlay">
+          <input type="checkbox" id="chk-safezone" checked />
+          <span>YT Safe Zone</span>
+        </label>
+      </div>
+
+      <div class="topbar-right">
+        <button type="button" id="sync-status-pill" class="sync-pill mono" title="Switch to 24/7 Live Clipper Bot view">
+          <span class="sync-dot" id="sync-dot"></span>
+          <span id="sync-pill-text">Syncing Bot...</span>
+        </button>
+        <label class="chk-pill" title="Automatically run Whisper captions + BGM + Cam Top &amp; export 1080x1920 Shorts whenever the clipper bot catches a new viral clip">
+          <input type="checkbox" id="chk-auto-sync" checked />
+          <span>Auto-Edit Bot Clips</span>
+        </label>
+        <span id="clip-meta-pill" class="meta-pill mono">No clip loaded</span>
+        <button id="btn-export-top" class="btn btn-primary" disabled>Export Master Short</button>
+      </div>
+    </header>
+
+    <!-- MAIN 3-PANE WORKSPACE -->
+    <div class="workspace">
+      <!-- LEFT MEDIA BIN -->
+      <aside class="pane bin-pane">
+        <div class="pane-tabs" id="bin-tabs">
+          <button class="pane-tab active" data-bin="bot">Bot Clips <span id="cnt-bot" class="badge">0</span></button>
+          <button class="pane-tab" data-bin="uploads">Uploads <span id="cnt-up" class="badge">0</span></button>
+          <button class="pane-tab" data-bin="exports">Exports <span id="cnt-exp" class="badge">0</span></button>
+        </div>
+
+        <div class="bin-panel active" id="bin-bot">
+          <div class="bin-subbar">
+            <span class="muted">From GTA 6 24/7 Bot</span>
+            <button id="btn-refresh-lib" class="btn btn-xs btn-ghost">Refresh</button>
+          </div>
+          <div id="bot-clips-list" class="media-list"></div>
+        </div>
+
+        <div class="bin-panel" id="bin-uploads">
+          <label class="dropzone" id="video-dropzone">
+            <input type="file" id="file-video-input" accept="video/mp4,video/quicktime,video/webm,.mkv,.mp4,.mov" hidden />
+            <strong>+ Drop Video or Click</strong>
+            <span class="muted">MP4, MOV, WebM, MKV (up to 800 MB)</span>
+          </label>
+          <div id="uploads-list" class="media-list"></div>
+        </div>
+
+        <div class="bin-panel" id="bin-exports">
+          <div class="bin-subbar">
+            <span id="exports-dir-label" class="muted mono" style="font-size:10px; overflow:hidden; text-overflow:ellipsis;">exports/</span>
+            <button id="btn-copy-exports" class="btn btn-xs btn-ghost">Copy Path</button>
+          </div>
+          <div id="exports-list" class="media-list"></div>
+        </div>
+      </aside>
+
+      <!-- CENTER 9:16 MONITOR -->
+      <main class="pane monitor-pane">
+        <div class="stage-wrap">
+          <div class="phone-frame" id="phone-frame">
+            <canvas id="preview-canvas" width="540" height="960"></canvas>
+            <!-- YouTube Shorts Safe-Zone HUD Overlay -->
+            <div id="safezone-overlay" class="safezone-overlay">
+              <div class="sz-top">TOP BAR SAFE ZONE (15%)</div>
+              <div class="sz-right">
+                <div class="sz-btn">&#9829;<span>Like</span></div>
+                <div class="sz-btn">&#9993;<span>Chat</span></div>
+                <div class="sz-btn">&#10150;<span>Share</span></div>
+              </div>
+              <div class="sz-bottom">
+                <div class="sz-chan">@YourChannel &bull; Subscribe</div>
+                <div class="sz-title">YouTube Shorts Title &amp; Audio Bar (Keep Captions Above)</div>
+              </div>
+            </div>
+            <div id="empty-stage" class="empty-stage">
+              <div class="empty-icon">&#9654;</div>
+              <h3>Load a Clip to Start Editing</h3>
+              <p>Click any GTA 6 clip on the left or upload your own video. CUTLAB PRO builds a live 9:16 timeline with waveform, dead-air detection, color grading, voice polish &amp; animated captions.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TRANSPORT & QUICK NLE TOOLS -->
+        <div class="transport-bar">
+          <div class="transport-group">
+            <button id="btn-step-back" class="btn btn-xs btn-ghost" title="Step Back 1 Frame (,)">&lsaquo;|</button>
+            <button id="btn-jump-back" class="btn btn-xs btn-ghost" title="Back 2s (J)">-2s</button>
+            <button id="btn-play" class="btn btn-primary btn-sm" title="Play / Pause (Space or K)">&#9654; Play</button>
+            <button id="btn-jump-fwd" class="btn btn-xs btn-ghost" title="Forward 2s (L)">+2s</button>
+            <button id="btn-step-fwd" class="btn btn-xs btn-ghost" title="Step Forward 1 Frame (.)">|&rsaquo;</button>
+          </div>
+
+          <div class="timecode mono">
+            <span id="tc-cur">00:00.00</span>
+            <span class="muted">/</span>
+            <span id="tc-tot" class="muted">00:00.00</span>
+          </div>
+
+          <div class="transport-group">
+            <button id="btn-split" class="btn btn-xs btn-ghost" title="Razor Split Segment at Playhead (C)">&#9986; Split (C)</button>
+            <button id="btn-trim-in" class="btn btn-xs btn-ghost" title="Trim Selected Segment Start to Playhead (I)">Trim In (I)</button>
+            <button id="btn-trim-out" class="btn btn-xs btn-ghost" title="Trim Selected Segment End to Playhead (O)">Trim Out (O)</button>
+            <button id="btn-del-seg" class="btn btn-xs btn-danger" title="Ripple Delete Selected Segment (Backspace)">Delete</button>
+          </div>
+        </div>
+        <video id="src-video" playsinline preload="auto" style="position:fixed;width:2px;height:2px;opacity:0.001;pointer-events:none;left:-9999px;top:0;"></video>
+      </main>
+
+      <!-- RIGHT PRO INSPECTOR -->
+      <aside class="pane inspector-pane">
+        <div class="pane-tabs" id="insp-tabs">
+          <button class="pane-tab active" data-insp="frame">Frame</button>
+          <button class="pane-tab" data-insp="color">Color</button>
+          <button class="pane-tab" data-insp="text">Text</button>
+          <button class="pane-tab" data-insp="audio">Audio</button>
+          <button class="pane-tab" data-insp="export">Export</button>
+        </div>
+
+        <!-- TAB 1: FRAME & SEGMENT -->
+        <div class="insp-panel active" id="insp-frame">
+          <div class="insp-section">
+            <h4>9:16 Reframing Mode</h4>
+            <div class="seg-btn-row four-col" id="framing-mode-row">
+              <button class="mode-btn active" data-mode="streamer_top">Cam Top + Mid</button>
+              <button class="mode-btn" data-mode="split_cam">Split Full</button>
+              <button class="mode-btn" data-mode="fill">Full Fill</button>
+              <button class="mode-btn" data-mode="blur_bg">Blur Cinema</button>
+            </div>
+            <label class="slider-row"><span>Gameplay Zoom <b id="lbl-zoom">1.00x</b></span><input id="in-zoom" type="range" min="1" max="2" step="0.02" value="1" /></label>
+            <label class="slider-row"><span>Gameplay Pan X <b id="lbl-panx">0%</b></span><input id="in-panx" type="range" min="-1" max="1" step="0.02" value="0" /></label>
+            <label class="slider-row"><span>Gameplay Pan Y <b id="lbl-pany">0%</b></span><input id="in-pany" type="range" min="-1" max="1" step="0.02" value="0" /></label>
+          </div>
+
+          <div class="insp-section hidden" id="split-cam-controls">
+            <h4>Streamer Facecam &amp; Gameplay Layout</h4>
+            <div class="muted" style="font-size:10.5px;">Drag directly on the stream frame to box the streamer's webcam:</div>
+            <div class="cam-picker-wrap">
+              <canvas id="cam-picker-canvas" width="280" height="158"></canvas>
+            </div>
+            <div class="preset-chips" id="cam-preset-chips">
+              <button type="button" class="chip-btn" data-cam-preset="0,0.40,0.205,0.22">Mid-Left (Kai/Speed)</button>
+              <button type="button" class="chip-btn" data-cam-preset="0,0.45,0.25,0.29">Mid-Left Lg (Jynxzi/xQc)</button>
+              <button type="button" class="chip-btn" data-cam-preset="0,0.125,0.21,0.28">Top-Left (CaseOh)</button>
+              <button type="button" class="chip-btn" data-cam-preset="0.81,0.17,0.175,0.20">Top-Right (DarkViper)</button>
+              <button type="button" class="chip-btn" data-cam-preset="0,0.70,0.24,0.28">Bottom-Left</button>
+              <button type="button" class="chip-btn" data-cam-preset="0.76,0.70,0.24,0.28">Bottom-Right</button>
+            </div>
+            <label class="slider-row"><span>Streamer Cam Height (Top) <b id="lbl-split">31%</b></span><input id="in-split" type="range" min="0.20" max="0.42" step="0.01" value="0.31" /></label>
+            <label class="slider-row" id="row-game-h"><span>Gameplay Height (Middle) <b id="lbl-gameh">42%</b></span><input id="in-gameh" type="range" min="0.32" max="0.56" step="0.01" value="0.42" /></label>
+            <label class="slider-row" id="row-top-pad"><span>Top Safe Margin <b id="lbl-toppad">5%</b></span><input id="in-toppad" type="range" min="0" max="0.14" step="0.01" value="0.05" /></label>
+            <div class="two-col">
+              <label class="slider-row"><span>Cam X <b id="lbl-camx">0%</b></span><input id="in-camx" type="range" min="0" max="0.85" step="0.01" value="0" /></label>
+              <label class="slider-row"><span>Cam Y <b id="lbl-camy">40%</b></span><input id="in-camy" type="range" min="0" max="0.85" step="0.01" value="0.40" /></label>
+            </div>
+            <div class="two-col">
+              <label class="slider-row"><span>Cam W <b id="lbl-camw">21%</b></span><input id="in-camw" type="range" min="0.10" max="0.60" step="0.01" value="0.21" /></label>
+              <label class="slider-row"><span>Cam H <b id="lbl-camh">24%</b></span><input id="in-camh" type="range" min="0.10" max="0.65" step="0.01" value="0.24" /></label>
+            </div>
+          </div>
+
+          <div class="insp-section" id="seg-inspector">
+            <h4>Selected Clip Segment <span id="lbl-seg-id" class="mono amber">#1</span></h4>
+            <label class="slider-row"><span>Speed Ramp <b id="lbl-seg-speed">1.00x</b></span><input id="in-seg-speed" type="range" min="0.5" max="2.25" step="0.05" value="1" /></label>
+            <label class="field-sm">
+              <span>Dynamic Camera Motion</span>
+              <select id="in-seg-zoom-mode">
+                <option value="none">Static (Clean Cut)</option>
+                <option value="punch">Punch-In Pulse (Retention Pop)</option>
+                <option value="push_in">Smooth Push-In (Ken Burns)</option>
+                <option value="zoom_hold">Zoom Hold &amp; Ease</option>
+              </select>
+            </label>
+            <label class="slider-row"><span>Motion Strength <b id="lbl-seg-zamt">1.12x</b></span><input id="in-seg-zamt" type="range" min="1.0" max="1.32" step="0.01" value="1.12" /></label>
+            <label class="field-sm">
+              <span>Entry Transition</span>
+              <select id="in-seg-trans">
+                <option value="none">Hard Cut (Pro Default)</option>
+                <option value="flash">Flash White (Climax Beat)</option>
+                <option value="dissolve">Smooth Dissolve</option>
+                <option value="wipe">Whip Wipe Left</option>
+                <option value="zoom">Radial Zoom Reveal</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <!-- TAB 2: COLOR GRADING -->
+        <div class="insp-panel" id="insp-color">
+          <div class="insp-section">
+            <h4>Creative Look Preset</h4>
+            <div class="look-grid" id="look-grid"></div>
+          </div>
+          <div class="insp-section">
+            <h4>Primary Color Correction</h4>
+            <label class="slider-row"><span>Exposure <b id="lbl-exp">0.00</b></span><input id="in-exp" type="range" min="-0.30" max="0.30" step="0.01" value="0" /></label>
+            <label class="slider-row"><span>Contrast <b id="lbl-con">1.06</b></span><input id="in-con" type="range" min="0.70" max="1.45" step="0.01" value="1.06" /></label>
+            <label class="slider-row"><span>Saturation <b id="lbl-sat">1.12</b></span><input id="in-sat" type="range" min="0.0" max="1.80" step="0.02" value="1.12" /></label>
+            <label class="slider-row"><span>Warmth (Temp) <b id="lbl-warm">0.00</b></span><input id="in-warm" type="range" min="-0.20" max="0.20" step="0.01" value="0" /></label>
+            <label class="slider-row"><span>Clarity Sharpen <b id="lbl-sharp">0.45</b></span><input id="in-sharp" type="range" min="0.0" max="1.20" step="0.05" value="0.45" /></label>
+            <label class="chk-row"><input type="checkbox" id="in-vignette" /><span>Cinematic Edge Vignette</span></label>
+          </div>
+        </div>
+
+        <!-- TAB 3: SPOKEN AUTO-CAPTIONS & OPTIONAL HOOK -->
+        <div class="insp-panel" id="insp-text">
+          <div class="insp-section">
+            <div class="sec-head">
+              <h4>Spoken Auto-Captions (Whisper)</h4>
+              <button id="btn-retranscribe" class="btn btn-xs btn-amber">Re-Sync Speech</button>
+            </div>
+            <div id="whisper-status" class="mono muted" style="font-size:10.5px;">Auto-transcribes real spoken words on load (zero chat spam).</div>
+            <div class="two-col">
+              <label class="field-sm">
+                <span>Style</span>
+                <select id="in-cap-style">
+                  <option value="capcut_pop">CapCut Karaoke Pop</option>
+                  <option value="mrbeast_bold">MrBeast Bold 3D</option>
+                  <option value="variety_pill">Variety Show Pill</option>
+                  <option value="clean_minimal">Clean Creator</option>
+                </select>
+              </label>
+              <label class="field-sm">
+                <span>Font</span>
+                <select id="in-cap-font">
+                  <option value="arial_black">Arial Black</option>
+                  <option value="impact">Impact</option>
+                  <option value="din">DIN Condensed</option>
+                  <option value="avenir">Avenir Bold</option>
+                </select>
+              </label>
+            </div>
+            <div class="two-col">
+              <label class="slider-row"><span>Size <b id="lbl-cap-sz">64px</b></span><input id="in-cap-sz" type="range" min="40" max="92" step="2" value="64" /></label>
+              <label class="field-sm"><span>Pop Color</span><input id="in-cap-accent" type="color" value="#ffe600" style="height:30px; width:100%;" /></label>
+            </div>
+            <label class="slider-row"><span>Vertical Position <b id="lbl-cap-y">76%</b></span><input id="in-cap-y" type="range" min="24" max="78" step="1" value="76" /></label>
+          </div>
+
+          <div class="insp-section">
+            <div class="sec-head">
+              <h4>Timed Caption Cues</h4>
+              <button id="btn-add-cap" class="btn btn-xs btn-ghost">+ Add Manual Cue</button>
+            </div>
+            <div id="captions-editor-list" class="cue-list"></div>
+          </div>
+
+          <div class="insp-section">
+            <h4>Optional Title Banner (Off by Default)</h4>
+            <label class="chk-row"><input type="checkbox" id="in-hook-on" /><span>Show Optional Banner Overlay</span></label>
+            <input id="in-hook-text" type="text" class="text-in" placeholder="Optional custom headline..." />
+            <div class="two-col">
+              <label class="field-sm"><span>Start (s)</span><input id="in-hook-start" type="number" step="0.1" min="0" value="0" /></label>
+              <label class="field-sm"><span>End (s)</span><input id="in-hook-end" type="number" step="0.1" min="0.5" value="2.8" /></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: VOICE ENGINEERING, VIRAL BGM & SFX -->
+        <div class="insp-panel" id="insp-audio">
+          <div class="insp-section">
+            <div class="sec-head">
+              <h4>Viral Background Music (Auto Vibe)</h4>
+              <label class="btn btn-xs btn-ghost" style="cursor:pointer;">
+                + Upload MP3/WAV
+                <input type="file" id="file-bgm-input" accept="audio/*" hidden />
+              </label>
+            </div>
+            <div id="vibe-badge" class="vibe-badge mono">Auto Vibe: Detecting clip mood...</div>
+            <div style="display:flex; gap:5px;">
+              <select id="in-bgm-select" class="select-full" style="flex:1;">
+                <option value="">None (Pure Voice + SFX)</option>
+              </select>
+              <button type="button" id="btn-bgm-preview" class="btn btn-xs btn-amber" title="Audition selected viral BGM">&#9654;</button>
+            </div>
+            <label class="slider-row"><span>BGM Volume <b id="lbl-bgm-vol">16%</b></span><input id="in-bgm-vol" type="range" min="0.04" max="0.50" step="0.01" value="0.16" /></label>
+            <label class="chk-row"><input type="checkbox" id="in-bgm-duck" checked /><span>Auto-Duck BGM Under Streamer Voice</span></label>
+          </div>
+
+          <div class="insp-section">
+            <h4>Built-In Studio SFX Rack (Clip-Aware)</h4>
+            <div id="sfx-rack" class="sfx-rack"></div>
+            <div id="sfx-timeline-list" class="cue-list" style="margin-top:8px;"></div>
+          </div>
+
+          <div class="insp-section">
+            <h4>Pro Voice Engineering Chain</h4>
+            <label class="chk-row"><input type="checkbox" id="in-a-hp" checked /><span>90 Hz High-Pass (Cut Rumble)</span></label>
+            <label class="chk-row"><input type="checkbox" id="in-a-dn" checked /><span>FFT DeNoise (Gentle Room Clean)</span></label>
+            <label class="chk-row"><input type="checkbox" id="in-a-eq" checked /><span>3.2 kHz Voice Presence Boost</span></label>
+            <label class="chk-row"><input type="checkbox" id="in-a-comp" checked /><span>3.5:1 Dynamics Compressor</span></label>
+            <label class="chk-row"><input type="checkbox" id="in-a-lufs" checked /><span>-14 LUFS Broadcast Loudness</span></label>
+            <label class="slider-row"><span>Master Gain <b id="lbl-a-vol">100%</b></span><input id="in-a-vol" type="range" min="0" max="1.8" step="0.05" value="1" /></label>
+          </div>
+        </div>
+
+        <!-- TAB 5: EXPORT & YOUTUBE SEO -->
+        <div class="insp-panel" id="insp-export">
+          <div class="insp-section">
+            <h4>YouTube Shorts Export Spec</h4>
+            <label class="field-sm"><span>Project Title</span><input id="in-proj-title" type="text" class="text-in" placeholder="gta6_insane_moment" /></label>
+            <label class="field-sm">
+              <span>Output Resolution (2K/4K Unlocks YouTube High-Bitrate VP9)</span>
+              <select id="in-exp-res">
+                <option value="1440p" selected>1440&times;2560 — 2K YouTube Sharp (Recommended)</option>
+                <option value="2160p">2160&times;3840 — 4K Ultra Master</option>
+                <option value="1080p">1080&times;1920 — Full HD</option>
+              </select>
+            </label>
+            <div class="two-col">
+              <label class="field-sm">
+                <span>Frame Rate</span>
+                <select id="in-exp-fps">
+                  <option value="60">60 fps (Gaming Smooth)</option>
+                  <option value="30">30 fps (Standard)</option>
+                </select>
+              </label>
+              <label class="field-sm">
+                <span>Quality / Bitrate</span>
+                <select id="in-exp-crf">
+                  <option value="13">Maximum Master (CRF 13)</option>
+                  <option value="14" selected>Pro Ultra Sharp (CRF 14)</option>
+                  <option value="16">High Quality (CRF 16)</option>
+                  <option value="19">Smaller File (CRF 19)</option>
+                </select>
+              </label>
+            </div>
+            <label class="chk-row"><input type="checkbox" id="in-exp-loop" /><span>Seamless Loop Micro-Crossfade</span></label>
+
+            <button id="btn-export-main" class="btn btn-primary btn-full" disabled style="margin-top:10px;">
+              Render Master Short + Cover + SRT
+            </button>
+
+            <div id="render-progress-box" class="progress-box hidden">
+              <div class="progress-row">
+                <span id="render-stage">Preparing...</span>
+                <span id="render-pct" class="mono amber">0%</span>
+              </div>
+              <div class="progress-track"><div id="render-bar" class="progress-fill"></div></div>
+            </div>
+
+            <div id="render-done-box" class="done-box hidden"></div>
+          </div>
+
+          <div class="insp-section">
+            <h4>YouTube Shorts SEO Packaging</h4>
+            <div id="seo-titles" class="seo-list"></div>
+            <textarea id="seo-desc" class="seo-textarea" rows="4" placeholder="Auto-generated SEO description &amp; hashtags..."></textarea>
+            <button id="btn-copy-seo" class="btn btn-xs btn-ghost" style="margin-top:6px;">Copy Description &amp; Hashtags</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- MERGED 24/7 LIVE CLIPPER BOT WORKSPACE (Toggled via Topbar) -->
+    <section id="bot-workspace" class="bot-workspace hidden">
+      <div class="bot-grid">
+        <div class="bot-card">
+          <div class="bot-card-head">
+            <div>
+              <h3>24/7 Multi-Streamer GTA 6 Watcher</h3>
+              <p class="muted" id="bot-subline">Watching live Twitch / YouTube / Kick streams &amp; syncing viral clips directly into CUTLAB PRO.</p>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button type="button" id="bot-poll-btn" class="btn btn-sm btn-ghost">Poll Live Streams</button>
+              <button type="button" id="bot-back-editor" class="btn btn-sm btn-amber">&larr; Back to Shorts Editor</button>
+            </div>
+          </div>
+
+          <form id="bot-add-form" class="bot-add-bar">
+            <input id="bot-in-name" type="text" class="text-in" placeholder="Add streamer (e.g. kaicenat, ishowspeed)" required />
+            <select id="bot-in-plat">
+              <option value="twitch">Twitch</option>
+              <option value="youtube">YouTube Live</option>
+              <option value="kick">Kick</option>
+            </select>
+            <label class="chk-pill"><input type="checkbox" id="bot-in-any" /><span>Any Game</span></label>
+            <button type="submit" class="btn btn-sm btn-primary">+ Watch 24/7</button>
+          </form>
+
+          <div id="bot-roster-list" class="bot-roster-list"></div>
+        </div>
+
+        <div class="bot-side">
+          <div class="bot-card">
+            <h4>Auto-Edit Pipeline (Bot &rarr; Shorts)</h4>
+            <div id="bot-sync-summary" class="vibe-badge mono">Live sync ready</div>
+            <div class="two-col" style="margin-top:8px;">
+              <label class="field-sm">
+                <span>Min Score to Auto-Edit</span>
+                <input id="bot-sync-score" type="number" min="30" max="95" step="1" value="70" />
+              </label>
+              <label class="field-sm">
+                <span>Auto-Delete Unchosen (min)</span>
+                <input id="bot-sync-expire" type="number" min="0" max="1440" step="1" value="10" title="0 = keep forever; 10 = auto-delete oldest unchosen clips after 10 min" />
+              </label>
+            </div>
+            <label class="field-sm" style="margin-top:6px;">
+              <span>Auto-Edit Style</span>
+              <select id="bot-sync-preset">
+                <option value="viral_gaming">Viral Gaming (Cam Top)</option>
+                <option value="clean_creator">Clean Creator</option>
+                <option value="cinematic">Cinematic Hype</option>
+              </select>
+            </label>
+            <button type="button" id="bot-sync-save" class="btn btn-sm btn-primary" style="margin-top:8px; width:100%;">Save Auto-Edit Rules</button>
+          </div>
+
+          <div class="bot-card" style="flex:1; min-height:0; display:flex; flex-direction:column;">
+            <h4>Live 24/7 Bot Activity Log</h4>
+            <div id="bot-events-list" class="bot-events mono"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOTTOM MULTI-TRACK NLE TIMELINE -->
+    <section class="timeline-dock">
+      <div class="tl-toolbar">
+        <div class="tl-left">
+          <span class="tl-badge">TIMELINE</span>
+          <span id="tl-summary" class="mono muted">0 segments &bull; 0.0s output</span>
+        </div>
+        <div class="tl-right">
+          <span class="kbd-hint muted">Shortcuts: <b>Space</b> Play &bull; <b>J/L</b> &plusmn;2s &bull; <b>C</b> Split &bull; <b>I/O</b> Trim &bull; <b>Del</b> Cut</span>
+          <button id="btn-reset-tl" class="btn btn-xs btn-ghost">Reset Full Clip</button>
+        </div>
+      </div>
+
+      <div class="tl-body" id="tl-body">
+        <div class="tl-labels">
+          <div class="tl-lbl ruler-lbl">TIME</div>
+          <div class="tl-lbl">V1 &bull; VIDEO</div>
+          <div class="tl-lbl">A1 &bull; WAVE</div>
+          <div class="tl-lbl">T1 &bull; TEXT</div>
+          <div class="tl-lbl">FX &bull; SFX</div>
+        </div>
+        <div class="tl-tracks" id="tl-tracks">
+          <canvas id="tl-ruler" class="tl-ruler"></canvas>
+          <div id="track-v1" class="track-lane track-v1"></div>
+          <canvas id="track-a1" class="track-lane track-a1"></canvas>
+          <div id="track-t1" class="track-lane track-t1"></div>
+          <div id="track-fx" class="track-lane track-fx"></div>
+          <div id="playhead" class="playhead"><div class="playhead-cap"></div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- EXPORT PREVIEW MODAL -->
+  <div id="export-modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <strong id="modal-title">Exported Short</strong>
+        <button id="modal-close" class="btn btn-xs btn-ghost">&times; Close</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

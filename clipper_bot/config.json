@@ -1,0 +1,100 @@
+{
+  "clips_dir": "clips_to_edit",
+  "buffers_dir": "buffers",
+  "logs_dir": "logs",
+  "poll_interval_sec": 45,
+  "segment_duration_sec": 10,
+  "ring_buffer_segments": 18,
+  "pre_roll_sec": 15,
+  "post_roll_sec": 10,
+  "max_clip_sec": 60,
+  "cooldown_sec": 25,
+  "max_clips_per_hour": 18,
+  "exceptional_score": 80.0,
+  "warmup_sec": 35,
+  "chat_delay_sec": 4.0,
+  "viral_score_threshold": 58.0,
+  "chat_z_threshold": 1.8,
+  "audio_z_threshold": 1.8,
+  "normalize_audio": true,
+  "quality_check": true,
+  "export_vertical_draft": false,
+  "max_clips_folder_gb": 25.0,
+  "auto_delete_minutes": 10,
+  "require_gta6_filter": true,
+  "gta6_keywords": [
+    "gta 6",
+    "gta vi",
+    "gtavi",
+    "gta6",
+    "grand theft auto vi",
+    "grand theft auto 6",
+    "vice city",
+    "leonida"
+  ],
+  "streamers": [
+    {
+      "name": "kaicenat",
+      "platform": "twitch",
+      "url": "https://www.twitch.tv/kaicenat",
+      "enabled": true,
+      "watch_any_game": false
+    },
+    {
+      "name": "caseoh_",
+      "platform": "twitch",
+      "url": "https://www.twitch.tv/caseoh_",
+      "enabled": true,
+      "watch_any_game": false
+    },
+    {
+      "name": "xqc",
+      "platform": "twitch",
+      "url": "https://www.twitch.tv/xqc",
+      "enabled": true,
+      "watch_any_game": false
+    },
+    {
+      "name": "jynxzi",
+      "platform": "twitch",
+      "url": "https://www.twitch.tv/jynxzi",
+      "enabled": true,
+      "watch_any_game": false
+    },
+    {
+      "name": "summit1g",
+      "platform": "twitch",
+      "url": "https://www.twitch.tv/summit1g",
+      "enabled": true,
+      "watch_any_game": false
+    },
+    {
+      "name": "darkviperau",
+      "platform": "twitch",
+      "url": "https://www.twitch.tv/darkviperau",
+      "enabled": true,
+      "watch_any_game": false
+    },
+    {
+      "name": "lirik",
+      "platform": "twitch",
+      "url": "https://www.twitch.tv/lirik",
+      "enabled": true,
+      "watch_any_game": false
+    },
+    {
+      "name": "ishowspeed",
+      "platform": "youtube",
+      "url": "https://www.youtube.com/@ishowspeed/live",
+      "enabled": true,
+      "watch_any_game": false
+    },
+    {
+      "name": "marlon",
+      "platform": "youtube",
+      "url": "https://www.youtube.com/@marlon/live",
+      "enabled": true,
+      "watch_any_game": false
+    }
+  ]
+}

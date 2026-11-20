@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ViceWatch 24/7 // GTA 6 Multi-Streamer Viral Clipping Bot</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-dot-wrap"><span class="live-dot" id="bot-dot"></span></div>
+        <div>
+          <div class="brand-title">ViceWatch 24/7 <span class="badge-tag mono">AUTO-CLIPPER</span></div>
+          <div class="brand-sub">Multi-Streamer GTA 6 Viral Detector &bull; Rolling DVR Ring Buffer</div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <a class="btn btn-primary btn-sm" href="http://127.0.0.1:8790/" target="_blank" rel="noopener" style="text-decoration:none;">Open Shorts Editor (:8790) &nearr;</a>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-poll-now">Poll Live Streams</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-simulate">Test Viral Clip Pipeline</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <!-- KPI & FOLDER BAR -->
+    <section class="kpi-strip">
+      <div class="kpi-card">
+        <div class="kpi-lbl">Bot Status</div>
+        <div class="kpi-val green mono" id="kpi-status">RUNNING 24/7</div>
+        <div class="kpi-sub mono" id="kpi-poll">Last poll: —</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">Active Ring Buffers</div>
+        <div class="kpi-val cyan mono" id="kpi-workers">0</div>
+        <div class="kpi-sub">Low-CPU 3-min rolling DVR</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">Clips Ready To Edit</div>
+        <div class="kpi-val amber mono" id="kpi-clips">0</div>
+        <div class="kpi-sub">CFR 16:9 H.264/AAC Masters</div>
+      </div>
+      <div class="kpi-card folder-card">
+        <div class="kpi-lbl">Output Folder on Your Computer</div>
+        <div class="folder-path mono" id="kpi-folder">clips_to_edit/</div>
+        <div class="folder-actions">
+          <button type="button" class="btn-link mono" id="btn-copy-path">Copy Folder Path</button>
+          <a class="btn-link mono" href="/clips/EDIT_QUEUE.csv" target="_blank">Open EDIT_QUEUE.csv</a>
+        </div>
+      </div>
+    </section>
+
+    <div class="main-grid">
+      <!-- LEFT COLUMN: STREAMER ROSTER & BOT SETTINGS -->
+      <div class="col-stack">
+        <section class="card">
+          <div class="card-head">
+            <div>
+              <h2>Tracked Streamers</h2>
+              <p class="card-desc">Add Twitch, YouTube Live, or Kick channels. Toggle <strong>Any Game</strong> to test on a live non-GTA stream tonight.</p>
+            </div>
+            <span class="mono muted" id="streamer-count">0 channels</span>
+          </div>
+
+          <form id="add-streamer-form" class="add-form">
+            <input id="in-name" type="text" placeholder="Channel name (e.g. kaicenat)" required />
+            <select id="in-platform">
+              <option value="twitch">Twitch (Live + Chat IRC)</option>
+              <option value="youtube">YouTube Live</option>
+              <option value="kick">Kick</option>
+            </select>
+            <input id="in-url" type="text" placeholder="Optional custom stream URL" />
+            <label class="chk-inline">
+              <input type="checkbox" id="in-any-game" />
+              <span>Any Game</span>
+            </label>
+            <button type="submit" class="btn btn-primary btn-sm">+ Add Streamer</button>
+          </form>
+
+          <div id="streamers-list" class="streamers-list">
+            <div class="empty-box">Loading streamer roster...</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <div>
+              <h2>Virality &amp; Export Settings</h2>
+              <p class="card-desc">Live-reloaded by all active 24/7 workers without restarting.</p>
+            </div>
+          </div>
+          <form id="settings-form" class="settings-grid">
+            <label class="field">
+              <span>Viral Score Threshold (0–100)</span>
+              <input id="set-threshold" type="number" step="1" min="30" max="98" value="70" />
+            </label>
+            <label class="field">
+              <span>Pre-Roll Setup (sec)</span>
+              <input id="set-pre" type="number" step="1" min="5" max="60" value="15" />
+            </label>
+            <label class="field">
+              <span>Post-Roll Reaction (sec)</span>
+              <input id="set-post" type="number" step="1" min="5" max="45" value="10" />
+            </label>
+            <label class="field">
+              <span>Max Extended Clip (sec)</span>
+              <input id="set-max-clip" type="number" step="5" min="20" max="120" value="60" />
+            </label>
+            <label class="field">
+              <span>Cooldown Between Clips (sec)</span>
+              <input id="set-cool" type="number" step="5" min="15" max="600" value="45" />
+            </label>
+            <label class="field">
+              <span>Max Clips / Hour (per streamer)</span>
+              <input id="set-max-hr" type="number" step="1" min="1" max="60" value="8" />
+            </label>
+            <label class="field">
+              <span>Baseline Warm-Up (sec)</span>
+              <input id="set-warmup" type="number" step="10" min="0" max="300" value="90" />
+            </label>
+            <label class="field">
+              <span>Max Folder Size Cap (GB)</span>
+              <input id="set-gb" type="number" step="1" min="1" max="500" value="25" />
+            </label>
+            <div class="toggles-col span-2">
+              <label class="chk-inline">
+                <input type="checkbox" id="set-gta-only" checked />
+                <span>Require GTA 6 Filter Globally</span>
+              </label>
+              <label class="chk-inline">
+                <input type="checkbox" id="set-norm-audio" checked />
+                <span>Normalize Clip Audio (-14 LUFS Broadcast Loudness)</span>
+              </label>
+              <label class="chk-inline">
+                <input type="checkbox" id="set-quality" checked />
+                <span>Auto-Reject Frozen, Black, or Silent Clips (Ad/BRB Guard)</span>
+              </label>
+              <label class="chk-inline">
+                <input type="checkbox" id="set-vertical" />
+                <span>Also Auto-Export 9:16 Vertical Draft</span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-ghost span-2">Save Settings</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>Live 24/7 Event Log</h2>
+          </div>
+          <div id="events-log" class="events-log mono"></div>
+        </section>
+      </div>
+
+      <!-- RIGHT COLUMN: CLIPS READY TO EDIT GALLERY -->
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h2>Clips Ready to Edit (<code>clips_to_edit/</code>)</h2>
+            <p class="card-desc">Sorted newest first. Every MP4 is Constant Frame Rate (CFR) for zero audio drift in CapCut / Premiere / DaVinci.</p>
+          </div>
+        </div>
+        <div id="clips-gallery" class="clips-gallery">
+          <div class="empty-box">No clips captured yet. Click <strong>Test Viral Clip Pipeline</strong> above to verify export right now, or wait for a live GTA 6 spike.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

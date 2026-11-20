@@ -1,0 +1,29 @@
+# Python virtual environments & bytecode
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+
+# Local secrets & lead CRM data (never commit!)
+.env
+lead_finder/.env
+lead_finder/leads.csv
+lead_finder/do_not_contact.txt
+
+# Runtime media, buffers, caches, exports & logs
+clipper_bot/buffers/
+clipper_bot/clips_to_edit/
+clipper_bot/logs/
+shorts_studio/uploads/
+shorts_studio/exports/
+shorts_studio/projects/
+shorts_studio/cache/
+shorts_studio/assets/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.tmp
+*.tmp.mp4
